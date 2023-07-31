@@ -71,7 +71,7 @@ function generateRandomText(length) {
 // Function to update the displayed output
 function updateOutput() {
     const outputElement = document.getElementById('output');
-    const text = generateRandomText(200);
+    const text = generateRandomText(20000);
     extractWords(text); // Extract and store generated words
     outputElement.textContent = text;
 }
