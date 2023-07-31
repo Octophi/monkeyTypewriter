@@ -1,3 +1,25 @@
+// Replace 'YOUR_API_KEY' with your actual WordsAPI key
+const apiKey = '';
+const apiUrl = 'https://wordsapiv1.p.rapidapi.com/words/';
+
+// Function to check if a word exists using the WordsAPI
+async function checkWordExistence(word) {
+  const url = `${apiUrl}${word}`;
+  const headers = {
+    'x-rapidapi-key': apiKey,
+    'x-rapidapi-host': 'wordsapiv1.p.rapidapi.com',
+  };
+
+  try {
+    const response = await fetch(url, { headers });
+    const data = await response.json();
+    return data.success !== false;
+  } catch (error) {
+    console.error('Error while checking word existence:', error);
+    return false;
+  }
+}
+
 // Probabilities for each letter of the English alphabet and basic punctuation
 const letterProbabilities = {
     'a': 8.167,
@@ -64,6 +86,8 @@ function generateRandomText(length) {
         text += keys[index - 1];
     }
 
+    text += " surprise";
+
     return text;
 }
 
@@ -71,10 +95,35 @@ function generateRandomText(length) {
 // Function to update the displayed output
 function updateOutput() {
     const outputElement = document.getElementById('output');
-    const text = generateRandomText(20000);
+    const text = generateRandomText(200);
     extractWords(text); // Extract and store generated words
     outputElement.textContent = text;
 }
 
+async function highlightValidWords() {
+    const outputElement = document.getElementById('output');
+    const text = outputElement.textContent;
+  
+    // Split the text into words
+    const words = text.split(/\s+/);
+  
+    // Create a new highlightedText variable to store the modified output
+    let highlightedText = '';
+  
+    for (const word of words) {
+      const exists = await checkWordExistence(word);
+  
+      // Wrap the valid English words with a <span> element and apply the "highlight" CSS class
+      const highlightedWord = exists ? `<span class="highlight">${word}</span>` : word;
+  
+      // Add the modified word (highlighted or not) to the highlightedText variable
+      highlightedText += `${highlightedWord} `;
+    }
+  
+    // Update the output element with the highlighted text
+    outputElement.innerHTML = highlightedText;
+  }
+
 // Generate initial output on page load
 updateOutput();
+highlightValidWords();
