@@ -84,7 +84,6 @@ function generateRandomText(length) {
         text += keys[index - 1];
     }
 
-    text += ' a i e j';
     return text;
 }
 

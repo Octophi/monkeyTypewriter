@@ -71,7 +71,7 @@ body {
   top: 50%;
   width: 3px;
   height: 90px;
-  background-color: #03a7d3;
+  background-color: #49FD97;
   -webkit-transform: translateY(-50%);
           transform: translateY(-50%);
 }
@@ -105,7 +105,7 @@ a:focus {
 /*header section*/
 .hero_area {
   position: relative;
-  background-color: #020230;
+  background-color: #233329;
   min-height: 100vh;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -289,11 +289,12 @@ a:focus {
   font-weight: bold;
   margin-bottom: 25px;
   font-size: 3rem;
+  color: #49FD97;
 }
 
 .slider_section .detail-box h1 span {
   font-size: 3rem;
-  color: #03a7d3;
+  color: #49FD97;
 }
 
 .slider_section .detail-box .btn-box {
@@ -312,17 +313,17 @@ a:focus {
 .slider_section .detail-box .btn-1 {
   display: inline-block;
   padding: 10px 15px;
-  background-color: #03a7d3;
-  color: #ffffff;
+  background-color: #49FD97;
+  color: #233329;
   border-radius: 5px;
-  border: 1px solid #03a7d3;
+  border: 1px solid #49FD97;
   -webkit-transition: all .3s;
   transition: all .3s;
 }
 
 .slider_section .detail-box .btn-1:hover {
   background-color: transparent;
-  color: #03a7d3;
+  color: #49FD97;
 }
 
 .slider_section .detail-box .btn-2 {
@@ -361,7 +362,7 @@ a:focus {
   position: unset;
   width: 50px;
   height: 50px;
-  background-color: #03a7d3;
+  background-color: #49FD97;
   opacity: 1;
   font-size: 28px;
   -webkit-transition: all .3s;
@@ -432,7 +433,7 @@ a:focus {
 .service_section .box .img-box {
   width: 75px;
   height: 75px;
-  background-color: #03a7d3;
+  background-color: #49FD97;
   border-radius: 100%;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -464,7 +465,7 @@ a:focus {
 }
 
 .service_section .box .detail-box a {
-  color: #03a7d3;
+  color: #49FD97;
 }
 
 .service_section .box .detail-box a:hover {
@@ -518,7 +519,7 @@ a:focus {
 .server_section .img-box .play_btn button {
   background-color: transparent;
   border: none;
-  background-color: #03a7d3;
+  background-color: #49FD97;
   color: #ffffff;
   width: 100%;
   height: 100%;
@@ -535,7 +536,7 @@ a:focus {
   position: absolute;
   top: 50%;
   left: 50%;
-  background-color: #03a7d3;
+  background-color: #49FD97;
   opacity: 1;
   border-radius: 100%;
   -webkit-transform: translate(-50%, -50%);
@@ -658,7 +659,7 @@ a:focus {
 
 .price_section .price_container .box .detail-box h6 {
   text-transform: uppercase;
-  color: #03a7d3;
+  color: #49FD97;
   font-size: 20px;
   margin-bottom: 10px;
 }
@@ -694,7 +695,7 @@ a:focus {
 }
 
 .price_section .price_container .box .btn-box a:hover {
-  background-color: #03a7d3;
+  background-color: #49FD97;
   color: #ffffff;
 }
 
@@ -703,7 +704,7 @@ a:focus {
 }
 
 .price_section .price_container .box:hover .detail-box {
-  background-color: #03a7d3;
+  background-color: #49FD97;
 }
 
 .price_section .price_container .box:hover h6 {
@@ -711,7 +712,7 @@ a:focus {
 }
 
 .price_section .price_container .box:hover a {
-  background-color: #03a7d3;
+  background-color: #49FD97;
   color: #ffffff;
 }
 
@@ -758,7 +759,7 @@ a:focus {
 
 .client_section .box .client_info .client_name h5 {
   font-weight: bold;
-  color: #03a7d3;
+  color: #49FD97;
   margin-bottom: 0;
   text-transform: uppercase;
 }
@@ -773,7 +774,7 @@ a:focus {
 
 .client_section .box .client_info i {
   font-size: 24px;
-  color: #03a7d3;
+  color: #49FD97;
 }
 
 .client_section .box p {
@@ -791,7 +792,7 @@ a:focus {
 .client_section .carousel-control-next {
   width: 50px;
   height: 50px;
-  background-color: #03a7d3;
+  background-color: #49FD97;
   opacity: 1;
   font-size: 28px;
   font-weight: bold;
@@ -1016,7 +1017,7 @@ a:focus {
 /* footer section*/
 .footer_section {
   position: relative;
-  background-color: #020230;
+  background-color: #233329;
   text-align: center;
 }
 
@@ -1032,8 +1033,12 @@ a:focus {
 }
 
 .highlight {
-  color: #ffffff;
+  color: #ffc2f0;
   font-weight: bold;
+}
+
+pre {
+  color: #ffffff;
 }
 
 /* Style for the output container */
