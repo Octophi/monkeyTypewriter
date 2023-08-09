@@ -123,7 +123,7 @@ async function updateOutput(apiKey) {
         const highlightedWord = (word === 'a' || word === 'i') ? `<span class="highlight">${word}</span>` : word;
   
         // Add the modified word (highlighted or not) to the highlightedText variable
-        highlightedText += `${highlightedWord} `;
+        highlightedText += `${highlightedWord}`;
           
       }
       else {
