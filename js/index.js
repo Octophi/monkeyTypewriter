@@ -11,7 +11,7 @@ async function checkWordExistence(word, apiKey) {
   try {
     const response = await fetch(url, { headers });
     const data = await response.json();
-    return data.success !== false;
+    return data.success && data.success !== false;
   } catch (error) {
     console.error('Error while checking word existence:', error);
     return false;
@@ -87,11 +87,9 @@ function generateRandomText(length) {
     return text;
 }
 
-async function updateOutput(apiKey) {
-    // ... Same as before ...
-  
+async function updateOutput(apiKey) {  
     const outputElement = document.getElementById('output');
-    const text = await generateRandomText(200);
+    const text = generateRandomText(2000);
   
     // Clear the output element before typing animation starts
     outputElement.textContent = '';
