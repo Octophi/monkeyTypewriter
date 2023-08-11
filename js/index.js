@@ -100,16 +100,26 @@ async function updateOutput(apiKey) {
 
     // Clear the output element before typing animation starts
     outputElement.textContent = '';
+    
+    // Fetch and store the span elements for each word in advance
+    const spanElementPromises = words.map((word) => getSpanElementForWord(word, apiKey));
 
-    for(const word of words){
-      await renderWord(word, apiKey);
+    // Render and animate each word
+    let prevAnimation = Promise.resolve();
+    for (let i = 0; i < words.length; i++) {
+      const spanElement = await spanElementPromises[i];
+      
+      prevAnimation = prevAnimation.then(async () => {
+        document.getElementById('output').appendChild(spanElement);
+        await animateTypingWord(words[i] + " ", spanElement);
+      });
     }
   }
 
   async function renderWord(word, apiKey) {
     const wordSpanElt = await getSpanElementForWord(word, apiKey); 
     document.getElementById('output').appendChild(wordSpanElt);
-    animateTypingWord(word + " ", wordSpanElt);
+    await animateTypingWord(word + " ", wordSpanElt);
   }
 
   async function getSpanElementForWord(word, apiKey){
