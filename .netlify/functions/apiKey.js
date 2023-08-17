@@ -1,4 +1,4 @@
-export async function handler(event, context) {
+export async function apiKey(event, context) {
     const apiKey = process.env.WORDS_API_KEY;
   
     return {
