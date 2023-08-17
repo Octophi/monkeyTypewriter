@@ -114,6 +114,10 @@ async function updateOutput(apiKey) {
         await animateTypingWord(words[i] + " ", spanElement);
       });
     }
+
+    await prevAnimation;
+
+    highlightWords(outputElement);
   }
 
   async function renderWord(word, apiKey) {
@@ -126,7 +130,7 @@ async function updateOutput(apiKey) {
     const exists = await checkWordExistence(word, apiKey);
     const spanElt = document.createElement("span");
     if(exists) {
-      spanElt.className = "highlight";
+      spanElt.className = "placeholder";
     }
     return spanElt;
   }
@@ -146,6 +150,26 @@ async function updateOutput(apiKey) {
       }
     });
   }
+
+  function highlightWords(containerElt) {
+    const highlightedSpanElts = containerElt.querySelectorAll('span.placeholder');
+  
+    function applyHighlight(index) {
+      if (index >= highlightedSpanElts.length) {
+        return; // Base case: all spans have been highlighted
+      }
+  
+      const highlightedSpanElt = highlightedSpanElts[index];
+      highlightedSpanElt.className = 'highlight';
+  
+      setTimeout(() => {
+        applyHighlight(index + 1); // Move on to the next span after a delay
+      }, 1000); // Adjust the delay time (in milliseconds) as needed
+    }
+  
+    applyHighlight(0); // Start highlighting from the first span
+  }
+  
 
 // Generate initial output on page load
 animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 0, 100);
