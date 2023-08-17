@@ -192,7 +192,11 @@ const generateButton = document.getElementById('generateButton');
 generateButton.addEventListener('click', async () => {
   const userInput = textInput.value;
   const apiKey = await fetchApiKey();
-  updateOutput(userInput);
+  if(userInput === 'makenew'){
+    updateOutput(apiKey);
+  } else {
+    updateOutput(userInput);
+  }
 });
 
 
