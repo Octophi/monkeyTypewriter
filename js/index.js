@@ -169,6 +169,16 @@ async function updateOutput(apiKey) {
   
     applyHighlight(0); // Start highlighting from the first span
   }
+
+  async function fetchApiKey() {
+    try {
+      const response = await fetch('/.netlify/functions/apiKey');
+      const data = await response.json();
+    } catch (error) {
+      console.error('Error fetching API key:', error);
+    }
+    return data.apiKey;
+  }
   
 
 // Generate initial output on page load
@@ -181,8 +191,8 @@ const generateButton = document.getElementById('generateButton');
 // Function to handle button click
 generateButton.addEventListener('click', async () => {
   const userInput = textInput.value;
-  const response = await fetch('/.netlify/functions/apiKey')
-		.then(response => response.json()
-	)
+  const apiKey = await fetchApiKey();
   updateOutput(userInput);
 });
+
+
