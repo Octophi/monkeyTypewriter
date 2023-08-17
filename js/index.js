@@ -179,7 +179,10 @@ const textInput = document.getElementById('textInput');
 const generateButton = document.getElementById('generateButton');
 
 // Function to handle button click
-generateButton.addEventListener('click', () => {
+generateButton.addEventListener('click', async () => {
   const userInput = textInput.value;
+  const response = await fetch('/.netlify/functions/apiKey')
+		.then(response => response.json()
+	)
   updateOutput(userInput);
 });
