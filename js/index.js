@@ -174,10 +174,10 @@ async function updateOutput(apiKey) {
     try {
       const response = await fetch('/.netlify/functions/apiKey');
       const data = await response.json();
+      return data.apiKey;
     } catch (error) {
       console.error('Error fetching API key:', error);
     }
-    return data.apiKey;
   }
   
 
