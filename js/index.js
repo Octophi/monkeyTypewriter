@@ -93,7 +93,7 @@ function getWordsArrayFromText(text) {
 
 async function updateOutput(apiKey) {  
     const outputElement = document.getElementById('output');
-    const text = generateRandomText(200);
+    const text = generateRandomText(400);
 
     //const text = "i tkydrklyguftydrt me hello ";
     const words = getWordsArrayFromText(text);
