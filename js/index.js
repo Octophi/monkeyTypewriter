@@ -95,7 +95,6 @@ async function updateOutput(apiKey) {
     const outputElement = document.getElementById('output');
     const text = generateRandomText(400);
 
-    //const text = "i tkydrklyguftydrt me hello ";
     const words = getWordsArrayFromText(text);
 
     // Clear the output element before typing animation starts
@@ -192,7 +191,7 @@ const generateButton = document.getElementById('generateButton');
 generateButton.addEventListener('click', async () => {
   const userInput = textInput.value;
   const apiKey = await fetchApiKey();
-  if(userInput === 'makenew'){
+  if(userInput === 'makenew23'){
     updateOutput(apiKey);
   } else {
     updateOutput(userInput);
