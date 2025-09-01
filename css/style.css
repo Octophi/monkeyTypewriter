@@ -292,6 +292,21 @@ a:focus {
   color: #49FD97;
 }
 
+.scoreboard h1 {
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 2rem;
+  color: #49FD97;
+  margin-top: 3rem;
+}
+
+.scoreboard ol, #topFiveList {
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 1.25rem;
+  color: #49FD97;
+}
+
 .slider_section .detail-box h1 span {
   font-size: 3rem;
   color: #49FD97;

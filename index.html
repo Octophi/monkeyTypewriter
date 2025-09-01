@@ -13,7 +13,7 @@
   <meta name="description" content="" />
   <meta name="author" content="" />
 
-  <title>monkeytypewriter</title>
+  <title>Monkey Typewriter</title>
 
 
   <!-- bootstrap core css -->
@@ -54,13 +54,25 @@
               </div>
             </div>
             <div class="col-md-6">
-              <div class="row">
+              <div class="column">
                 <div class=" col-lg-10 mx-auto">
                   <pre id="output"></pre>
                 </div>
               </div>
             </div>
           </div>
+            <div class="col-md-6">
+              <div class="scoreboard">
+                <h1 id="scoreboardHeader"></h1>
+                <ol id="topFiveList"></ol>
+              </div>
+            </div> 
+            <div class="col-md-6">
+              <div class="scoreboard">
+                <h1 id="globalScoreboardHeader"></h1>
+                <ol id="topFiveGlobal"></ol>
+              </div>
+            </div> 
         </div>
     </section>
     <!-- end slider section -->
@@ -75,7 +87,7 @@
     </div>
   </footer>
   <!-- footer section -->
-  <script src="./js/index.js"></script>
+  <script type="module" src="./js/index.js"></script>
 
 </body>
 
