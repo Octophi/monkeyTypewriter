@@ -13,7 +13,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Connect Firestore to emulator (adjust IP if running on another device)
-connectFirestoreEmulator(db, "localhost", 8080);
-// Or: connectFirestoreEmulator(db, "192.168.x.xxx", 8080);
+connectFirestoreEmulator(db, "10.197.95.107", 8080); // UPDATE IP (Second Arg)
 
 export { db };

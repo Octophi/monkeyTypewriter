@@ -26,10 +26,6 @@ def split_words_by_first_letter(input_file, output_dir):
             if not word.isalpha():
                 continue
 
-            # Filter 2: remove words with 2 or more uppercase letters
-            if sum(1 for c in word if c.isupper()) >= 2:
-                continue
-
             # Filter 3: remove single-letter words
             if len(word) == 1:
                 continue
