@@ -10,3 +10,7 @@
 
 1. Go to `https://www.qr-code-generator.com/` to create the code.
 2. The link will be `"IP":8888` (ex. 10.197.95.107:8888)
+
+## Secret Shakespeare
+
+Pressing `Enter` will toggle the ability to print out Shakespeare's Romeo and Juliet. There are no indicators on the UI, so be careful when you press it.  

@@ -2,10 +2,40 @@ import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/fire
 import { db } from "../firebase.js";
 import { updateGlobalScoreboard } from "../dbcalls.js";
 
-const wordLists = {};  // key: letter, value: Set(words)
-const loadingPromises = {}; // key: letter, value: Promise for loading
+// Load words.txt once and keep the Set in memory
+let WORD_SET = null;
+let wordSetLoadPromise = null;
+
+function loadWordSetOnce() {
+  if (WORD_SET) return Promise.resolve(WORD_SET);
+  if (wordSetLoadPromise) return wordSetLoadPromise;
+
+  wordSetLoadPromise = fetch('/words/words.txt')
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    })
+    .then(text => {
+      const words = text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean);
+      WORD_SET = new Set(words);
+      return WORD_SET;
+    })
+    .catch(error => {
+      console.error('Error loading word list:', error);
+      WORD_SET = new Set();
+      return WORD_SET;
+    })
+    .finally(() => {
+      // allow GC of the promise once settled; the data stays in WORD_SET
+      wordSetLoadPromise = null;
+    });
+
+  return wordSetLoadPromise;
+}
+
 let topFive = [];
 let topFiveGlobal = [];
+let printShakespeare = false;
 
 const listElement = document.getElementById('topFiveList');
 
@@ -28,36 +58,6 @@ function renderGlobalTopFiveList() {
   });
 }
 
-
-async function loadWordList(letter) {
-  if (wordLists[letter]) {
-    // Already loaded
-    return wordLists[letter];
-  }
-  if (loadingPromises[letter]) {
-    // Loading in progress, wait for it
-    return loadingPromises[letter];
-  }
-
-  // Start fetching
-  loadingPromises[letter] = fetch(`/words/letters/${letter}.txt`)
-    .then(response => response.text())
-    .then(text => {
-      const words = text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean);
-      const wordSet = new Set(words);
-      wordLists[letter] = wordSet;
-      delete loadingPromises[letter]; // Clear loading promise
-      return wordSet;
-    })
-    .catch(error => {
-      console.error(`Error loading word list for ${letter}:`, error);
-      delete loadingPromises[letter];
-      return new Set();  // return empty set on error to avoid retry loop
-    });
-
-  return loadingPromises[letter];
-}
-
 // Function to check if a word exists using the WordsAPI
 async function checkWordExistence(word) {
   word = word.toLowerCase()
@@ -69,10 +69,8 @@ async function checkWordExistence(word) {
     // Don't bother checking one letter words with the API
     return (word === 'a' || word === 'i');
   }
-
-  const firstLetter = word[0];
-  const wordSet = await loadWordList(firstLetter);
-  return wordSet.has(word);
+  if (!WORD_SET) await loadWordSetOnce();
+  return WORD_SET.has(word);
 }
 
 // Probabilities for each letter of the English alphabet and basic punctuation
@@ -113,21 +111,25 @@ const letterProbabilities = {
 // Function to generate random text
 function generateRandomText(length) {
     let text = '';
-    const keys = Object.keys(letterProbabilities);
-    const values = Object.values(letterProbabilities);
-    const totalProbabilities = values.reduce((a, b) => a + b, 0);
-
-    for (let i = 0; i < length; i++) {
-        let random = Math.random() * totalProbabilities;
-        let sum = 0;
-        let index = 0;
-
-        while (sum <= random) {
-            sum += values[index];
-            index++;
-        }
-
-        text += keys[index - 1];
+    if (printShakespeare) {
+      text = "Two households, both alike in dignity, In fair Verona, where we lay our scene, From ancient grudge break to new mutiny, Where civil blood makes civil hands unclean. From forth the fatal loins of these two foes A pair of star-crossed lovers take their life; Whose misadventured piteous overthrows Do with their death bury their parents' strife. The fearful passage of their death-marked love, And...  "
+    } else {
+      const keys = Object.keys(letterProbabilities);
+      const values = Object.values(letterProbabilities);
+      const totalProbabilities = values.reduce((a, b) => a + b, 0);
+  
+      for (let i = 0; i < length; i++) {
+          let random = Math.random() * totalProbabilities;
+          let sum = 0;
+          let index = 0;
+  
+          while (sum <= random) {
+              sum += values[index];
+              index++;
+          }
+  
+          text += keys[index - 1];
+      }
     }
 
     return text;
@@ -139,7 +141,7 @@ function getWordsArrayFromText(text) {
     return text.match(wordPattern);
 }
 
-async function updateOutput(apiKey) {  
+async function updateOutput() {  
     const outputElement = document.getElementById('output');
     const text = generateRandomText(400);
 
@@ -149,7 +151,7 @@ async function updateOutput(apiKey) {
     outputElement.textContent = '';
     
     // Fetch and store the span elements for each word in advance
-    const spanElementPromises = words.map((word) => getSpanElementForWord(word, apiKey));
+    const spanElementPromises = words.map((word) => getSpanElementForWord(word));
 
     // Render and animate each word
     let prevAnimation = Promise.resolve();
@@ -167,8 +169,8 @@ async function updateOutput(apiKey) {
     highlightWords(outputElement);
   }
 
-  async function getSpanElementForWord(word, apiKey){
-    const exists = await checkWordExistence(word, apiKey);
+  async function getSpanElementForWord(word){
+    const exists = await checkWordExistence(word);
     const spanElt = document.createElement("span");
     if(exists) {
       spanElt.className = "placeholder";
@@ -233,19 +235,20 @@ async function updateOutput(apiKey) {
     applyHighlight(0); // Start highlighting from the first span
   }
 
+// Warm the word set cache at startup (non-blocking)
+loadWordSetOnce();
+
 // Generate initial output on page load
 animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 0, 100);
 animateTypingWord("top 5 (personal)", document.getElementById("scoreboardHeader"), 0, 100);
 animateTypingWord("top 5 (global)", document.getElementById("globalScoreboardHeader"), 0, 100);
 
 // Get references to the input and button elements
-const textInput = document.getElementById('textInput');
 const generateButton = document.getElementById('generateButton');
 
 // Function to handle button click
 generateButton.addEventListener('click', async () => {
-  const userInput = textInput.value;
-    updateOutput(userInput);
+    updateOutput();
 });
 
 function listenToGlobalScoreboard() {
@@ -263,6 +266,15 @@ function listenToGlobalScoreboard() {
     console.error('Error listening to global scoreboard:', error);
   });
 }
+
+// Listen for keydown events globally
+document.addEventListener('keydown', (event) => {
+  // You can add custom logic here, for example:
+  if (event.key === 'Enter') {
+    printShakespeare = !printShakespeare;
+    console.log('Updating Result');
+  }
+});
 
 listenToGlobalScoreboard();
 
