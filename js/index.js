@@ -1,7 +1,66 @@
-const apiUrl = 'https://wordsapiv1.p.rapidapi.com/words/';
+import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { db } from "../firebase.js";
+import { updateGlobalScoreboard } from "../dbcalls.js";
+
+// Load words.txt once and keep the Set in memory
+let WORD_SET = null;
+let wordSetLoadPromise = null;
+
+function loadWordSetOnce() {
+  if (WORD_SET) return Promise.resolve(WORD_SET);
+  if (wordSetLoadPromise) return wordSetLoadPromise;
+
+  wordSetLoadPromise = fetch('/words/words.txt')
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    })
+    .then(text => {
+      const words = text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean);
+      WORD_SET = new Set(words);
+      return WORD_SET;
+    })
+    .catch(error => {
+      console.error('Error loading word list:', error);
+      WORD_SET = new Set();
+      return WORD_SET;
+    })
+    .finally(() => {
+      // allow GC of the promise once settled; the data stays in WORD_SET
+      wordSetLoadPromise = null;
+    });
+
+  return wordSetLoadPromise;
+}
+
+let topFive = [];
+let topFiveGlobal = [];
+let printShakespeare = false;
+
+const listElement = document.getElementById('topFiveList');
+
+listElement.innerHTML = '';
+
+topFive.forEach(item => {
+  const li = document.createElement('li');
+  li.textContent = item;
+  listElement.appendChild(li);
+});
+
+
+function renderGlobalTopFiveList() {
+  const listElement = document.getElementById('topFiveGlobal');
+  listElement.innerHTML = ''; // Clear old list
+  topFiveGlobal.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    listElement.appendChild(li);
+  });
+}
 
 // Function to check if a word exists using the WordsAPI
-async function checkWordExistence(word, apiKey) {
+async function checkWordExistence(word) {
+  word = word.toLowerCase()
 
   if (/^[,.?!]$/.test(word)) {
     // For punctuation, keep it unchanged (not highlighting punctuation)
@@ -10,21 +69,8 @@ async function checkWordExistence(word, apiKey) {
     // Don't bother checking one letter words with the API
     return (word === 'a' || word === 'i');
   }
-
-  const url = `${apiUrl}${word}`;
-  const headers = {
-    'x-rapidapi-key': apiKey,
-    'x-rapidapi-host': 'wordsapiv1.p.rapidapi.com',
-  };
-
-  try {
-    const response = await fetch(url, { headers });
-    const data = await response.json();
-    return data.word;
-  } catch (error) {
-    console.error('Error while checking word existence:', error);
-    return false;
-  }
+  if (!WORD_SET) await loadWordSetOnce();
+  return WORD_SET.has(word);
 }
 
 // Probabilities for each letter of the English alphabet and basic punctuation
@@ -65,21 +111,25 @@ const letterProbabilities = {
 // Function to generate random text
 function generateRandomText(length) {
     let text = '';
-    const keys = Object.keys(letterProbabilities);
-    const values = Object.values(letterProbabilities);
-    const totalProbabilities = values.reduce((a, b) => a + b, 0);
-
-    for (let i = 0; i < length; i++) {
-        let random = Math.random() * totalProbabilities;
-        let sum = 0;
-        let index = 0;
-
-        while (sum <= random) {
-            sum += values[index];
-            index++;
-        }
-
-        text += keys[index - 1];
+    if (printShakespeare) {
+      text = "Two households, both alike in dignity, In fair Verona, where we lay our scene, From ancient grudge break to new mutiny, Where civil blood makes civil hands unclean. From forth the fatal loins of these two foes A pair of star-crossed lovers take their life; Whose misadventured piteous overthrows Do with their death bury their parents' strife. The fearful passage of their death-marked love, And...  "
+    } else {
+      const keys = Object.keys(letterProbabilities);
+      const values = Object.values(letterProbabilities);
+      const totalProbabilities = values.reduce((a, b) => a + b, 0);
+  
+      for (let i = 0; i < length; i++) {
+          let random = Math.random() * totalProbabilities;
+          let sum = 0;
+          let index = 0;
+  
+          while (sum <= random) {
+              sum += values[index];
+              index++;
+          }
+  
+          text += keys[index - 1];
+      }
     }
 
     return text;
@@ -91,7 +141,7 @@ function getWordsArrayFromText(text) {
     return text.match(wordPattern);
 }
 
-async function updateOutput(apiKey) {  
+async function updateOutput() {  
     const outputElement = document.getElementById('output');
     const text = generateRandomText(400);
 
@@ -101,7 +151,7 @@ async function updateOutput(apiKey) {
     outputElement.textContent = '';
     
     // Fetch and store the span elements for each word in advance
-    const spanElementPromises = words.map((word) => getSpanElementForWord(word, apiKey));
+    const spanElementPromises = words.map((word) => getSpanElementForWord(word));
 
     // Render and animate each word
     let prevAnimation = Promise.resolve();
@@ -119,14 +169,8 @@ async function updateOutput(apiKey) {
     highlightWords(outputElement);
   }
 
-  async function renderWord(word, apiKey) {
-    const wordSpanElt = await getSpanElementForWord(word, apiKey); 
-    document.getElementById('output').appendChild(wordSpanElt);
-    await animateTypingWord(word + " ", wordSpanElt);
-  }
-
-  async function getSpanElementForWord(word, apiKey){
-    const exists = await checkWordExistence(word, apiKey);
+  async function getSpanElementForWord(word){
+    const exists = await checkWordExistence(word);
     const spanElt = document.createElement("span");
     if(exists) {
       spanElt.className = "placeholder";
@@ -150,16 +194,38 @@ async function updateOutput(apiKey) {
     });
   }
 
+  function renderTopFiveList() {
+    const listElement = document.getElementById('topFiveList');
+    listElement.innerHTML = ''; // Clear old list
+    topFive.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      listElement.appendChild(li);
+    });
+  }
+
+  function addWordToScoreboard(word) {
+    const lastTopFiveIdx = topFive.length - 1;
+    if (topFive.includes(word)) return;
+    if (topFive.length === 5 && word.length < (topFive[lastTopFiveIdx]?.length ?? 0)) return;
+    topFive.push(word);
+    topFive.sort((a,b,) => b.length - a.length)
+    topFive.splice(5);
+    renderTopFiveList();
+  }
+
   function highlightWords(containerElt) {
     const highlightedSpanElts = containerElt.querySelectorAll('span.placeholder');
   
-    function applyHighlight(index) {
+    async function applyHighlight(index) {
       if (index >= highlightedSpanElts.length) {
+        await updateGlobalScoreboard(topFive, topFiveGlobal);
         return; // Base case: all spans have been highlighted
       }
   
       const highlightedSpanElt = highlightedSpanElts[index];
       highlightedSpanElt.className = 'highlight';
+      addWordToScoreboard(highlightedSpanElt.textContent)
   
       setTimeout(() => {
         applyHighlight(index + 1); // Move on to the next span after a delay
@@ -169,33 +235,46 @@ async function updateOutput(apiKey) {
     applyHighlight(0); // Start highlighting from the first span
   }
 
-  async function fetchApiKey() {
-    try {
-      const response = await fetch('/.netlify/functions/apiKey');
-      const data = await response.json();
-      return data.apiKey;
-    } catch (error) {
-      console.error('Error fetching API key:', error);
-    }
-  }
-  
+// Warm the word set cache at startup (non-blocking)
+loadWordSetOnce();
 
 // Generate initial output on page load
 animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 0, 100);
+animateTypingWord("top 5 (personal)", document.getElementById("scoreboardHeader"), 0, 100);
+animateTypingWord("top 5 (global)", document.getElementById("globalScoreboardHeader"), 0, 100);
 
 // Get references to the input and button elements
-const textInput = document.getElementById('textInput');
 const generateButton = document.getElementById('generateButton');
 
 // Function to handle button click
 generateButton.addEventListener('click', async () => {
-  const userInput = textInput.value;
-  const apiKey = await fetchApiKey();
-  if(userInput === 'makenew23'){
-    updateOutput(apiKey);
-  } else {
-    updateOutput(userInput);
+    updateOutput();
+});
+
+function listenToGlobalScoreboard() {
+  const globalScoreboardRef = doc(db, 'global-scoreboard', 'scoreboard');
+
+  return onSnapshot(globalScoreboardRef, (docSnap) => {
+    if (docSnap.exists()) {
+      topFiveGlobal = docSnap.data().words || [];
+      renderGlobalTopFiveList();
+    } else {
+      topFiveGlobal = [];
+      renderGlobalTopFiveList();
+    }
+  }, (error) => {
+    console.error('Error listening to global scoreboard:', error);
+  });
+}
+
+// Listen for keydown events globally
+document.addEventListener('keydown', (event) => {
+  // You can add custom logic here, for example:
+  if (event.key === 'Enter') {
+    printShakespeare = !printShakespeare;
+    console.log('Updating Result');
   }
 });
 
+listenToGlobalScoreboard();
 
