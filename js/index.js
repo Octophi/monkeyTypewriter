@@ -1,6 +1,6 @@
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { db } from "../firebase.js";
 import { updateGlobalScoreboard } from "../dbcalls.js";
+import { db } from "../firebase.js";
 
 // Load words.txt once and keep the Set in memory
 let WORD_SET = null;
@@ -58,19 +58,18 @@ function renderGlobalTopFiveList() {
   });
 }
 
-// Function to check if a word exists using the WordsAPI
-async function checkWordExistence(word) {
-  word = word.toLowerCase()
+// Function to check if a word exists (sync version)
+function checkWordExistence(word) {
+  word = word.toLowerCase();
 
   if (/^[,.?!]$/.test(word)) {
-    // For punctuation, keep it unchanged (not highlighting punctuation)
-    return false;
-  } else if (word.length === 1){
-    // Don't bother checking one letter words with the API
+    return false; // punctuation doesn't count
+  } else if (word.length === 1) {
     return (word === 'a' || word === 'i');
   }
-  if (!WORD_SET) await loadWordSetOnce();
-  return WORD_SET.has(word);
+
+  // Ensure WORD_SET is loaded — fallback to false if not ready
+  return WORD_SET ? WORD_SET.has(word) : false;
 }
 
 // Probabilities for each letter of the English alphabet and basic punctuation
@@ -142,56 +141,51 @@ function getWordsArrayFromText(text) {
 }
 
 async function updateOutput() {  
-    const outputElement = document.getElementById('output');
-    const text = generateRandomText(400);
+  const outputElement = document.getElementById('output');
+  const text = generateRandomText(400);
 
-    const words = getWordsArrayFromText(text);
+  const words = getWordsArrayFromText(text);
 
-    // Clear the output element before typing animation starts
-    outputElement.textContent = '';
-    
-    // Fetch and store the span elements for each word in advance
-    const spanElementPromises = words.map((word) => getSpanElementForWord(word));
+  // Clear the output element before typing animation starts
+  outputElement.textContent = '';
 
-    // Render and animate each word
-    let prevAnimation = Promise.resolve();
-    for (let i = 0; i < words.length; i++) {
-      const spanElement = await spanElementPromises[i];
-      
-      prevAnimation = prevAnimation.then(async () => {
-        document.getElementById('output').appendChild(spanElement);
-        await animateTypingWord(words[i] + " ", spanElement);
-      });
-    }
+  // Pre-build span elements synchronously
+  const spanElements = words.map(getSpanElementForWord);
 
-    await prevAnimation;
+  // Use a DocumentFragment to reduce reflows
+  const fragment = document.createDocumentFragment();
+  spanElements.forEach(span => fragment.appendChild(span));
+  outputElement.appendChild(fragment);
 
-    highlightWords(outputElement);
+  // Render + animate each word in sequence
+  let prevAnimation = Promise.resolve();
+  for (let i = 0; i < words.length; i++) {
+    const spanElement = spanElements[i];
+    prevAnimation = prevAnimation.then(() =>
+      animateTypingWord(words[i] + " ", spanElement)
+    );
   }
 
-  async function getSpanElementForWord(word){
-    const exists = await checkWordExistence(word);
+  await prevAnimation;
+
+  highlightWords(outputElement);
+}
+
+  function getSpanElementForWord(word) {
+    const exists = checkWordExistence(word);
     const spanElt = document.createElement("span");
-    if(exists) {
+    if (exists) {
       spanElt.className = "placeholder";
     }
     return spanElt;
   }
 
-  function animateTypingWord(word, wordHtmlElt, currentIndex = 0, timeout = 10){
-    return new Promise((resolve) => {
-      if (currentIndex < word.length) {
-        // Add one character to the outputElement
-        wordHtmlElt.textContent += word.charAt(currentIndex);
-  
-        // Schedule the next character to be added after a short delay
-        setTimeout(() => {
-          animateTypingWord(word, wordHtmlElt, currentIndex + 1, timeout).then(resolve);
-        }, timeout); // Adjust the delay as needed for desired typing speed
-      } else {
-        resolve(); // Resolve the promise when typing animation is complete
-      }
-    });
+  async function animateTypingWord(word, wordHtmlElt, timeout = 10) {
+    for (let i = 0; i < word.length; i++) {
+      wordHtmlElt.textContent += word[i];
+      // Wait for the specified timeout before next character
+      await new Promise(resolve => setTimeout(resolve, timeout));
+    }
   }
 
   function renderTopFiveList() {
@@ -229,7 +223,7 @@ async function updateOutput() {
   
       setTimeout(() => {
         applyHighlight(index + 1); // Move on to the next span after a delay
-      }, 1000); // Adjust the delay time (in milliseconds) as needed
+      }, 300); // Adjust the delay time (in milliseconds) as needed
     }
   
     applyHighlight(0); // Start highlighting from the first span
@@ -239,9 +233,9 @@ async function updateOutput() {
 loadWordSetOnce();
 
 // Generate initial output on page load
-animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 0, 100);
-animateTypingWord("top 5 (personal)", document.getElementById("scoreboardHeader"), 0, 100);
-animateTypingWord("top 5 (global)", document.getElementById("globalScoreboardHeader"), 0, 100);
+animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 100);
+animateTypingWord("top 5 (personal)", document.getElementById("scoreboardHeader"), 100);
+animateTypingWord("top 5 (global)", document.getElementById("globalScoreboardHeader"), 100);
 
 // Get references to the input and button elements
 const generateButton = document.getElementById('generateButton');
