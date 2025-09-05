@@ -42,31 +42,36 @@
                 <p>
                   We've all heard a monkey hitting random keys for an infinite amount of time will inevitably type Shakespeare. But what if a monkey typed on a 
                   40% mechanical keyboard according to the natural frequencies of English letters for a finite amount of time?  </p>
-                <div class="btn-box">
-                  <a id="generateButton" class="btn-1">Generate</a>
+                  <div id="stopwatch" class="stopwatch"></div>
+                  <div class="btn-box">
+                    <a id="timerButton" class="btn-1">Start Timer</a>
+                  </div>
+                  <div class="btn-box">
+                  <a id="generateButton" class="btn-1">Generate Text</a>
                 </div>
               </div>
             </div>
             <div class="col-md-6">
               <div class="column">
-                <div class=" col-lg-10 mx-auto">
+                <div class=" col-lg-10">
                   <pre id="output"></pre>
                 </div>
               </div>
             </div>
           </div>
-            <div class="col-md-6">
-              <div class="scoreboard">
+          <div class="column"> 
+            <h1 id="scoreboardTop5"></div>
+            <div class="scoreboard">
+              <div class = "scoreboard-info">
                 <h1 id="scoreboardHeader"></h1>
                 <ol id="topFiveList"></ol>
               </div>
-            </div> 
-            <div class="col-md-6">
-              <div class="scoreboard">
+              <div class = "scoreboard-info">
                 <h1 id="globalScoreboardHeader"></h1>
                 <ol id="topFiveGlobal"></ol>
-              </div>
-            </div> 
+              </div>              
+            </div>
+          </div>
         </div>
     </section>
     <!-- end slider section -->

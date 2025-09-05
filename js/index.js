@@ -59,7 +59,7 @@ function renderGlobalTopFiveList() {
 }
 
 // Function to check if a word exists (sync version)
-function checkWordExistence(word) {
+async function checkWordExistence(word) {
   word = word.toLowerCase();
 
   if (/^[,.?!]$/.test(word)) {
@@ -67,9 +67,10 @@ function checkWordExistence(word) {
   } else if (word.length === 1) {
     return (word === 'a' || word === 'i');
   }
-
+  console.log(WORD_SET ? console.log(WORD_SET.has(word)) : console.log('nope'))
   // Ensure WORD_SET is loaded — fallback to false if not ready
-  return WORD_SET ? WORD_SET.has(word) : false;
+  if (!WORD_SET) await loadWordSetOnce();
+  return WORD_SET.has(word);
 }
 
 // Probabilities for each letter of the English alphabet and basic punctuation
@@ -141,38 +142,36 @@ function getWordsArrayFromText(text) {
 }
 
 async function updateOutput() {  
-  const outputElement = document.getElementById('output');
-  const text = generateRandomText(400);
+    const outputElement = document.getElementById('output');
+    const text = generateRandomText(400);
 
-  const words = getWordsArrayFromText(text);
+    const words = getWordsArrayFromText(text);
 
-  // Clear the output element before typing animation starts
-  outputElement.textContent = '';
+    // Clear the output element before typing animation starts
+    outputElement.textContent = '';
+    
+    // Fetch and store the span elements for each word in advance
+    const spanElementPromises = words.map((word) => getSpanElementForWord(word));
 
-  // Pre-build span elements synchronously
-  const spanElements = words.map(getSpanElementForWord);
+    // Render and animate each word
+    let prevAnimation = Promise.resolve();
+    for (let i = 0; i < words.length; i++) {
+      const spanElement = await spanElementPromises[i];
+      
+      prevAnimation = prevAnimation.then(async () => {
+        document.getElementById('output').appendChild(spanElement);
+        await animateTypingWord(words[i], spanElement);
+        document.getElementById('output').appendChild(document.createTextNode(" "));
+      });
+    }
 
-  // Use a DocumentFragment to reduce reflows
-  const fragment = document.createDocumentFragment();
-  spanElements.forEach(span => fragment.appendChild(span));
-  outputElement.appendChild(fragment);
+    await prevAnimation;
 
-  // Render + animate each word in sequence
-  let prevAnimation = Promise.resolve();
-  for (let i = 0; i < words.length; i++) {
-    const spanElement = spanElements[i];
-    prevAnimation = prevAnimation.then(() =>
-      animateTypingWord(words[i] + " ", spanElement)
-    );
+    highlightWords(outputElement);
   }
 
-  await prevAnimation;
-
-  highlightWords(outputElement);
-}
-
-  function getSpanElementForWord(word) {
-    const exists = checkWordExistence(word);
+  async function getSpanElementForWord(word) {
+    const exists = await checkWordExistence(word);
     const spanElt = document.createElement("span");
     if (exists) {
       spanElt.className = "placeholder";
@@ -180,12 +179,20 @@ async function updateOutput() {
     return spanElt;
   }
 
-  async function animateTypingWord(word, wordHtmlElt, timeout = 10) {
-    for (let i = 0; i < word.length; i++) {
-      wordHtmlElt.textContent += word[i];
-      // Wait for the specified timeout before next character
-      await new Promise(resolve => setTimeout(resolve, timeout));
-    }
+  function animateTypingWord(word, wordHtmlElt, currentIndex = 0, timeout = 10){
+    return new Promise((resolve) => {
+      if (currentIndex < word.length) {
+        // Add one character to the outputElement
+        wordHtmlElt.textContent += word.charAt(currentIndex);
+  
+        // Schedule the next character to be added after a short delay
+        setTimeout(() => {
+          animateTypingWord(word, wordHtmlElt, currentIndex + 1, timeout).then(resolve);
+        }, timeout); // Adjust the delay as needed for desired typing speed
+      } else {
+        resolve(); // Resolve the promise when typing animation is complete
+      }
+    });
   }
 
   function renderTopFiveList() {
@@ -233,9 +240,10 @@ async function updateOutput() {
 loadWordSetOnce();
 
 // Generate initial output on page load
-animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 100);
-animateTypingWord("top 5 (personal)", document.getElementById("scoreboardHeader"), 100);
-animateTypingWord("top 5 (global)", document.getElementById("globalScoreboardHeader"), 100);
+animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 0, 100);
+animateTypingWord("personal", document.getElementById("scoreboardHeader"), 0, 100);
+animateTypingWord("global", document.getElementById("globalScoreboardHeader"), 0, 100);
+animateTypingWord("Top 5", document.getElementById("scoreboardTop5", 0, 100))
 
 // Get references to the input and button elements
 const generateButton = document.getElementById('generateButton');
@@ -261,14 +269,57 @@ function listenToGlobalScoreboard() {
   });
 }
 
-// Listen for keydown events globally
+
+// Track currently pressed keys for combination detection
+const keysPressed = new Set();
+
 document.addEventListener('keydown', (event) => {
-  // You can add custom logic here, for example:
-  if (event.key === 'Enter') {
+  keysPressed.add(event.key);
+  // Detect "Control" + "Enter" pressed simultaneously
+  if (keysPressed.has('Shift') && keysPressed.has('Enter')) {
     printShakespeare = !printShakespeare;
-    console.log('Updating Result');
+    console.log('Toggled printShakespeare via Shift+Enter');
   }
+});
+
+document.addEventListener('keyup', (event) => {
+  keysPressed.delete(event.key);
 });
 
 listenToGlobalScoreboard();
 
+const timeValue = 60; // UPDATE IF WE WANT TO CHANGE TIME
+const timeDisplayValue = "01:00" // UPDATE IF WE WANT TO CHANGE
+let timerEl = document.getElementById("stopwatch");
+let startTime;
+let timerInterval;
+let remainingTime = timeValue;
+
+function startStopwatch() {
+  remainingTime = timeValue;
+  startTime = Date.now();
+  clearInterval(timerInterval); // reset if already running
+  timerInterval = setInterval(() => {
+    let minutes = Math.floor(remainingTime / 60);
+    let seconds = remainingTime % 60;
+    timerEl.textContent =
+      String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+
+    if (remainingTime <= 0) {
+      setTimeout(() => stopStopwatch(), 2000);
+    } else {
+      remainingTime--;
+    }
+  }, 1000);
+}
+
+function stopStopwatch() {
+  clearInterval(timerInterval);
+  remainingTime = timeValue;
+  timerEl.textContent = timeDisplayValue
+}
+
+timerEl.textContent = timeDisplayValue
+const stopwatchButton = document.getElementById("timerButton").addEventListener("click", () => {
+  startStopwatch();
+})
