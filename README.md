@@ -13,4 +13,9 @@
 
 ## Secret Shakespeare
 
-Pressing `Enter` will toggle the ability to print out Shakespeare's Romeo and Juliet. There are no indicators on the UI, so be careful when you press it.  
+Pressing `Shift` + `Enter` will toggle the ability to print out Shakespeare's Romeo and Juliet. There are no indicators on the UI, so be careful when you press it.  
+
+
+## Setting Timer Values
+
+Go to index.js and update the `timerValue` and `timerDisplayValue`. They should correlate with each other (01:00 = 60, 01:30 = 90).

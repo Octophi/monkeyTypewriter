@@ -287,3 +287,39 @@ document.addEventListener('keyup', (event) => {
 });
 
 listenToGlobalScoreboard();
+
+const timeValue = 60; // UPDATE IF WE WANT TO CHANGE TIME
+const timeDisplayValue = "01:00" // UPDATE IF WE WANT TO CHANGE
+let timerEl = document.getElementById("stopwatch");
+let startTime;
+let timerInterval;
+let remainingTime = timeValue;
+
+function startStopwatch() {
+  remainingTime = timeValue;
+  startTime = Date.now();
+  clearInterval(timerInterval); // reset if already running
+  timerInterval = setInterval(() => {
+    let minutes = Math.floor(remainingTime / 60);
+    let seconds = remainingTime % 60;
+    timerEl.textContent =
+      String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+
+    if (remainingTime <= 0) {
+      setTimeout(() => stopStopwatch(), 2000);
+    } else {
+      remainingTime--;
+    }
+  }, 1000);
+}
+
+function stopStopwatch() {
+  clearInterval(timerInterval);
+  remainingTime = timeValue;
+  timerEl.textContent = timeDisplayValue
+}
+
+timerEl.textContent = timeDisplayValue
+const stopwatchButton = document.getElementById("timerButton").addEventListener("click", () => {
+  startStopwatch();
+})

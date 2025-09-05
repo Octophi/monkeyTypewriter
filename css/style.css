@@ -40,6 +40,7 @@ body {
 
 /* Content boxes */
 .detail-box {
+  margin-left: 2rem;
   margin-bottom: 45px;
 }
 
@@ -156,6 +157,13 @@ body {
   border-radius: 3px;
   font-weight: bold;
   animation: highlightPulse 0.5s ease-in-out;
+}
+
+.stopwatch {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 15px 0;
+  text-align: center;
 }
 
 @keyframes highlightPulse {
