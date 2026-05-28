@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "build:config": "node ./scripts/generate-firebase-config.mjs",
+    "build": "npm run build:config",
+    "dev": "npm run build:config && ntl dev --port 8888"
+  },
   "dependencies": {
     "firebase": "^12.2.1",
     "netlify": "^23.4.3"
