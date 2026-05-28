@@ -2,91 +2,75 @@
 <html>
 
 <head>
-  <!-- Basic -->
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <!-- Mobile Metas -->
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <!-- Site Metas -->
   <link rel="icon" href="images/monkey.png" type="image/gif" />
-  <meta name="keywords" content="" />
-  <meta name="description" content="" />
-  <meta name="author" content="" />
-
   <title>Monkey Typewriter</title>
-
-
-  <!-- bootstrap core css -->
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
-
-  <!-- Custom styles for this template -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet" />
-
-
 </head>
 
 <body>
-  
 
-  <div class="hero_area">
-    
-    <!-- slider section -->
-    <section class="slider_section ">
-       <div class="container ">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="detail-box">
-                <h1 id="pageHeader">
-                  
-                </h1>
-                <p>
-                  We've all heard a monkey hitting random keys for an infinite amount of time will inevitably type Shakespeare. But what if a monkey typed on a 
-                  40% mechanical keyboard according to the natural frequencies of English letters for a finite amount of time?  </p>
-                  <div id="stopwatch" class="stopwatch"></div>
-                  <div class="btn-box">
-                    <a id="timerButton" class="btn-1">Start Timer</a>
-                  </div>
-                  <div class="btn-box">
-                  <a id="generateButton" class="btn-1">Generate Text</a>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="column">
-                <div class=" col-lg-10">
-                  <pre id="output"></pre>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="column"> 
-            <h1 id="scoreboardTop5"></div>
-            <div class="scoreboard">
-              <div class = "scoreboard-info">
-                <h1 id="scoreboardHeader"></h1>
-                <ol id="topFiveList"></ol>
-              </div>
-              <div class = "scoreboard-info">
-                <h1 id="globalScoreboardHeader"></h1>
-                <ol id="topFiveGlobal"></ol>
-              </div>              
-            </div>
-          </div>
-        </div>
-    </section>
-    <!-- end slider section -->
-  </div>
-  <!-- footer section -->
-  <footer class="footer_section">
-    <div class="container">
-      <p>
-        &copy; <span id="displayYear"></span> All Rights Reserved By
-        <a href="https://html.design/">Free Html Templates</a>
-      </p>
+  <header class="top-bar">
+    <div class="brand">
+      <span class="brand-bullet" aria-hidden="true"></span>
+      <h1 id="pageHeader" class="site-title"></h1>
+    </div>
+    <div class="top-controls">
+      <span id="stopwatch" class="timer-display"></span>
+      <a id="timerButton" class="ctrl-btn">start timer</a>
+      <a id="generateButton" class="ctrl-btn generate">generate</a>
+    </div>
+    <div class="ribbon-stripe" aria-hidden="true"></div>
+  </header>
+
+  <main class="output-stage">
+    <div class="paper">
+      <div class="paper-shadow" aria-hidden="true"></div>
+      <div class="paper-sheet">
+        <pre id="output"></pre>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom scoreboard. On desktop it's a fixed bar; on mobile it
+       collapses to a peek bar that opens into a sheet (see js/drawer.js). -->
+  <footer class="score-bar" id="scoreBar" data-open="false">
+    <div class="ribbon-stripe" aria-hidden="true"></div>
+
+    <!-- Mobile-only peek row (hidden on desktop via CSS) -->
+    <button class="score-peek" id="scorePeek" type="button">
+      <span class="score-peek-label">top 5</span>
+      <span class="score-peek-preview" id="scorePeekPreview">no finds yet</span>
+      <span class="score-peek-chevron" aria-hidden="true">▴</span>
+    </button>
+
+    <div class="score-body">
+      <div class="score-drawer-header">
+        <span class="score-heading score-heading--mobile">top 5</span>
+        <button class="score-close" id="scoreClose" type="button">close ▾</button>
+      </div>
+
+      <span id="scoreboardTop5" class="score-heading"></span>
+
+      <div class="score-section">
+        <span id="scoreboardHeader" class="score-label"></span>
+        <ol id="topFiveList" class="score-list"></ol>
+      </div>
+
+      <div class="score-section score-section--global">
+        <span id="globalScoreboardHeader" class="score-label"></span>
+        <ol id="topFiveGlobal" class="score-list"></ol>
+      </div>
     </div>
   </footer>
-  <!-- footer section -->
+
   <script type="module" src="./js/index.js"></script>
+  <script src="./js/drawer.js"></script>
 
 </body>
 

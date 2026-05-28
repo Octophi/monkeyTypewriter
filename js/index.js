@@ -37,16 +37,6 @@ let topFive = [];
 let topFiveGlobal = [];
 let printShakespeare = false;
 
-const listElement = document.getElementById('topFiveList');
-
-listElement.innerHTML = '';
-
-topFive.forEach(item => {
-  const li = document.createElement('li');
-  li.textContent = item;
-  listElement.appendChild(li);
-});
-
 
 function renderGlobalTopFiveList() {
   const listElement = document.getElementById('topFiveGlobal');
@@ -67,7 +57,6 @@ async function checkWordExistence(word) {
   } else if (word.length === 1) {
     return (word === 'a' || word === 'i');
   }
-  console.log(WORD_SET ? console.log(WORD_SET.has(word)) : console.log('nope'))
   // Ensure WORD_SET is loaded — fallback to false if not ready
   if (!WORD_SET) await loadWordSetOnce();
   return WORD_SET.has(word);
@@ -141,24 +130,26 @@ function getWordsArrayFromText(text) {
     return text.match(wordPattern);
 }
 
-async function updateOutput() {  
+let generationId = 0;
+
+async function updateOutput() {
+    const myId = ++generationId;
     const outputElement = document.getElementById('output');
     const text = generateRandomText(400);
 
     const words = getWordsArrayFromText(text);
 
-    // Clear the output element before typing animation starts
     outputElement.textContent = '';
-    
-    // Fetch and store the span elements for each word in advance
+
     const spanElementPromises = words.map((word) => getSpanElementForWord(word));
 
-    // Render and animate each word
     let prevAnimation = Promise.resolve();
     for (let i = 0; i < words.length; i++) {
+      if (generationId !== myId) return;
       const spanElement = await spanElementPromises[i];
-      
+
       prevAnimation = prevAnimation.then(async () => {
+        if (generationId !== myId) return;
         document.getElementById('output').appendChild(spanElement);
         await animateTypingWord(words[i], spanElement);
         document.getElementById('output').appendChild(document.createTextNode(" "));
@@ -167,6 +158,7 @@ async function updateOutput() {
 
     await prevAnimation;
 
+    if (generationId !== myId) return;
     highlightWords(outputElement);
   }
 
@@ -243,7 +235,7 @@ loadWordSetOnce();
 animateTypingWord("monkey typewriter", document.getElementById("pageHeader"), 0, 100);
 animateTypingWord("personal", document.getElementById("scoreboardHeader"), 0, 100);
 animateTypingWord("global", document.getElementById("globalScoreboardHeader"), 0, 100);
-animateTypingWord("Top 5", document.getElementById("scoreboardTop5", 0, 100))
+animateTypingWord("Top 5", document.getElementById("scoreboardTop5"), 0, 100)
 
 // Get references to the input and button elements
 const generateButton = document.getElementById('generateButton');
@@ -320,6 +312,7 @@ function stopStopwatch() {
 }
 
 timerEl.textContent = timeDisplayValue
-const stopwatchButton = document.getElementById("timerButton").addEventListener("click", () => {
+const stopwatchButton = document.getElementById("timerButton");
+stopwatchButton.addEventListener("click", () => {
   startStopwatch();
 })

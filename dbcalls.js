@@ -9,19 +9,20 @@ const globalScoreboardDoc = doc(globalScoreboardRef, docName)
 export async function updateGlobalScoreboard(localScoreboard, globalScoreboard) {
   if (!Array.isArray(localScoreboard) || !Array.isArray(globalScoreboard)) return;
   const largestLocalLength = localScoreboard[0]?.length ?? 0
-  globalScoreboard.sort((a,b) => b.length - a.length);
-  const smallestGlobalLength = globalScoreboard[globalScoreboard.length - 1]?.length ?? 0
+  const sortedGlobal = [...globalScoreboard].sort((a,b) => b.length - a.length);
+  const smallestGlobalLength = sortedGlobal[sortedGlobal.length - 1]?.length ?? 0
 
   if (largestLocalLength > smallestGlobalLength) {
+    const candidate = [...sortedGlobal];
     localScoreboard.forEach(element => {
-      if (!globalScoreboard.includes(element)) {
-        globalScoreboard.push(element);
+      if (!candidate.includes(element)) {
+        candidate.push(element);
       }
     });
-    globalScoreboard.sort((a,b) => b.length - a.length)
-    globalScoreboard.splice(5)
+    candidate.sort((a,b) => b.length - a.length)
+    candidate.splice(5)
     try {
-      await setDoc(globalScoreboardDoc, { words: globalScoreboard })
+      await setDoc(globalScoreboardDoc, { words: candidate })
     } catch (error) {
       console.error('error:', error)
     }
