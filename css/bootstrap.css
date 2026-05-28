@@ -3,8 +3,8 @@
 /* Container */
 .container {
   width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
+  padding-right: 2rem;
+  padding-left: 2rem;
   margin-right: auto;
   margin-left: auto;
 }
@@ -45,8 +45,6 @@
 .col-md-6 {
   position: relative;
   width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
 }
 
 @media (min-width: 768px) {

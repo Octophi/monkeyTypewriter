@@ -13,22 +13,34 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 /* Main content section */
 .slider_section {
   flex: 1;
   display: flex;
+  justify-content: center;
   align-items: center;
-  padding: 90px 0;
+  padding: 0;
+}
+
+.slider_section .column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .slider_section .row {
   align-items: center;
+  display: flex;
+  justify-content: center;
 }
 
 /* Content boxes */
 .detail-box {
+  margin-left: 2rem;
   margin-bottom: 45px;
 }
 
@@ -41,6 +53,7 @@ body {
 /* Button styles */
 .btn-box {
   display: flex;
+  justify-content: center;
   margin-top: 30px;
 }
 
@@ -63,16 +76,28 @@ body {
 }
 
 /* Scoreboard styles */
+.scoreboard-container {
+  width: 100%;
+  flex: 1;
+}
+
+.scoreboard-info {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+}
 .scoreboard {
   background-color: #ffffff;
   padding: 30px;
+  display: flex;
+  flex-direction: row;
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
 }
 
 .scoreboard h1 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: bold;
   margin-bottom: 20px;
   color: #0c0c0c;
@@ -88,7 +113,7 @@ body {
 .scoreboard ol li, #topFiveList li {
   padding: 10px 0;
   border-bottom: 1px solid #eee;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .scoreboard ol li:last-child, #topFiveList li:last-child {
@@ -134,6 +159,13 @@ body {
   animation: highlightPulse 0.5s ease-in-out;
 }
 
+.stopwatch {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 15px 0;
+  text-align: center;
+}
+
 @keyframes highlightPulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -142,9 +174,7 @@ body {
 
 /* Footer */
 .footer_section {
-  background-color: #0c0c0c;
-  color: #ffffff;
-  padding: 20px 0;
+  color: #0c0c0c;
   text-align: center;
 }
 
@@ -165,7 +195,7 @@ body {
 /* Responsive design */
 @media (max-width: 992px) {
   .slider_section {
-    padding: 45px 0 90px 0;
+    padding: 45px 0 0 0;
   }
   
   .detail-box {
@@ -174,7 +204,7 @@ body {
   }
   
   .btn-box {
-    justify-content: center;
+    justify-content: center
   }
 }
 
