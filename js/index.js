@@ -240,10 +240,16 @@ animateTypingWord("Top 5", document.getElementById("scoreboardTop5"), 0, 100)
 // Get references to the input and button elements
 const generateButton = document.getElementById('generateButton');
 
-// Function to handle button click
 generateButton.addEventListener('click', async () => {
     updateOutput();
 });
+
+const generateButtonMobile = document.getElementById('generateButtonMobile');
+if (generateButtonMobile) {
+  generateButtonMobile.addEventListener('click', async () => {
+    updateOutput();
+  });
+}
 
 function listenToGlobalScoreboard() {
   const globalScoreboardRef = doc(db, 'global-scoreboard', 'scoreboard');
