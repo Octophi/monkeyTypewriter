@@ -46,7 +46,8 @@ body {
 
 .detail-box h1 {
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  font-size: 2rem;
   color: #0c0c0c;
 }
 
@@ -94,6 +95,7 @@ body {
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
+  margin-top: 300px;
 }
 
 .scoreboard h1 {
@@ -137,7 +139,8 @@ body {
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
-  max-height: 400px;
+  min-height: 360px;
+  max-height: 360px;
   overflow-y: auto;
   border: 1px solid #ddd;
 }
