@@ -36,6 +36,9 @@ function loadWordSetOnce() {
 let topFive = [];
 let topFiveGlobal = [];
 let printShakespeare = false;
+let timerRunning = false;
+let continuousModeActive = false;
+let controlsLocked = false;
 
 
 function renderGlobalTopFiveList() {
@@ -132,34 +135,38 @@ function getWordsArrayFromText(text) {
 
 let generationId = 0;
 
-async function updateOutput() {
-    const myId = ++generationId;
-    const outputElement = document.getElementById('output');
-    const text = generateRandomText(400);
-
+async function generateAndAppendChunk(length, myId, outputElement, isCancelled) {
+    const text = generateRandomText(length);
     const words = getWordsArrayFromText(text);
-
-    outputElement.textContent = '';
-
     const spanElementPromises = words.map((word) => getSpanElementForWord(word));
 
     let prevAnimation = Promise.resolve();
     for (let i = 0; i < words.length; i++) {
-      if (generationId !== myId) return;
+      if (isCancelled()) return;
       const spanElement = await spanElementPromises[i];
 
       prevAnimation = prevAnimation.then(async () => {
-        if (generationId !== myId) return;
-        document.getElementById('output').appendChild(spanElement);
+        if (isCancelled()) return;
+        outputElement.appendChild(spanElement);
         await animateTypingWord(words[i], spanElement);
-        document.getElementById('output').appendChild(document.createTextNode(" "));
+        outputElement.appendChild(document.createTextNode(" "));
+        scrollOutputToBottom(outputElement);
       });
     }
-
     await prevAnimation;
+    if (isCancelled()) return;
+    await highlightWords(outputElement, isCancelled);
+  }
 
-    if (generationId !== myId) return;
-    highlightWords(outputElement);
+  async function updateOutput() {
+    const myId = ++generationId;
+    const outputElement = document.getElementById('output');
+    const isCancelled = () => generationId !== myId;
+
+    outputElement.textContent = '';
+    await generateAndAppendChunk(400, myId, outputElement, isCancelled);
+    if (isCancelled()) return;
+    await flushGlobalScoreboard();
   }
 
   async function getSpanElementForWord(word) {
@@ -207,25 +214,63 @@ async function updateOutput() {
     renderTopFiveList();
   }
 
-  function highlightWords(containerElt) {
+  function highlightWords(containerElt, isCancelled) {
     const highlightedSpanElts = containerElt.querySelectorAll('span.placeholder');
-  
-    async function applyHighlight(index) {
-      if (index >= highlightedSpanElts.length) {
-        await updateGlobalScoreboard(topFive, topFiveGlobal);
-        return; // Base case: all spans have been highlighted
+    return new Promise((resolve) => {
+      function applyHighlight(index) {
+        if (isCancelled() || index >= highlightedSpanElts.length) {
+          resolve();
+          return;
+        }
+        const highlightedSpanElt = highlightedSpanElts[index];
+        highlightedSpanElt.className = 'highlight';
+        addWordToScoreboard(highlightedSpanElt.textContent);
+        setTimeout(() => applyHighlight(index + 1), 300);
       }
-  
-      const highlightedSpanElt = highlightedSpanElts[index];
-      highlightedSpanElt.className = 'highlight';
-      addWordToScoreboard(highlightedSpanElt.textContent)
-  
-      setTimeout(() => {
-        applyHighlight(index + 1); // Move on to the next span after a delay
-      }, 300); // Adjust the delay time (in milliseconds) as needed
+      applyHighlight(0);
+    });
+  }
+
+  async function flushGlobalScoreboard() {
+    await updateGlobalScoreboard(topFive, topFiveGlobal);
+  }
+
+  const CONTINUOUS_CHUNK_LENGTH = 80;
+  const OUTPUT_TRIM_THRESHOLD = 4000; // characters; trim only at chunk boundaries, never mid-chunk
+
+  function trimOutputIfNeeded(outputElement) {
+    while (outputElement.textContent.length > OUTPUT_TRIM_THRESHOLD && outputElement.firstChild) {
+      outputElement.removeChild(outputElement.firstChild);
     }
-  
-    applyHighlight(0); // Start highlighting from the first span
+  }
+
+  function scrollOutputToBottom(outputElement) {
+    const scrollContainer = outputElement.closest('.paper-sheet') || outputElement;
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+  }
+
+  async function runContinuousLoop() {
+    const myId = ++generationId;
+    const outputElement = document.getElementById('output');
+    const isCancelled = () => generationId !== myId || !continuousModeActive || !timerRunning;
+
+    outputElement.textContent = '';
+
+    try {
+      while (!isCancelled()) {
+        await generateAndAppendChunk(CONTINUOUS_CHUNK_LENGTH, myId, outputElement, isCancelled);
+        if (isCancelled()) break;
+        trimOutputIfNeeded(outputElement);
+        scrollOutputToBottom(outputElement);
+      }
+    } finally {
+      if (generationId === myId) {
+        await flushGlobalScoreboard();
+      }
+      continuousModeActive = false;
+      continuousToggle.checked = false;
+      setControlsLocked(false);
+    }
   }
 
 // Warm the word set cache at startup (non-blocking)
@@ -239,17 +284,47 @@ animateTypingWord("Top 5", document.getElementById("scoreboardTop5"), 0, 100)
 
 // Get references to the input and button elements
 const generateButton = document.getElementById('generateButton');
+const continuousToggle = document.getElementById('continuousToggle');
+
+function setControlsLocked(locked) {
+  controlsLocked = locked;
+  [generateButton, generateButtonMobile].forEach((btn) => {
+    if (!btn) return;
+    btn.classList.toggle('is-disabled', locked);
+    btn.setAttribute('aria-disabled', locked ? 'true' : 'false');
+  });
+}
 
 generateButton.addEventListener('click', async () => {
+    if (controlsLocked) return;
     updateOutput();
 });
 
 const generateButtonMobile = document.getElementById('generateButtonMobile');
 if (generateButtonMobile) {
   generateButtonMobile.addEventListener('click', async () => {
+    if (controlsLocked) return;
     updateOutput();
   });
 }
+
+continuousToggle.addEventListener('change', () => {
+  if (continuousToggle.checked) {
+    if (!timerRunning) {
+      continuousToggle.checked = false;
+      return;
+    }
+    continuousModeActive = true;
+    setControlsLocked(true);
+    runContinuousLoop();
+  } else {
+    continuousModeActive = false;
+    // Do not bump generationId here — runContinuousLoop's own isCancelled
+    // check (which includes continuousModeActive) will stop it after the
+    // current word, and its `finally` block still runs the final scoreboard
+    // flush + UI reset since generationId is untouched.
+  }
+});
 
 function listenToGlobalScoreboard() {
   const globalScoreboardRef = doc(db, 'global-scoreboard', 'scoreboard');
@@ -290,13 +365,17 @@ const timeValue = 60; // UPDATE IF WE WANT TO CHANGE TIME
 const timeDisplayValue = "01:00" // UPDATE IF WE WANT TO CHANGE
 let timerEl = document.getElementById("stopwatch");
 let startTime;
-let timerInterval;
+let timerInterval = null;
 let remainingTime = timeValue;
 
 function startStopwatch() {
   remainingTime = timeValue;
   startTime = Date.now();
   clearInterval(timerInterval); // reset if already running
+  timerRunning = true;
+  continuousModeActive = false;
+  continuousToggle.checked = false;
+  continuousToggle.disabled = false;
   timerInterval = setInterval(() => {
     let minutes = Math.floor(remainingTime / 60);
     let seconds = remainingTime % 60;
@@ -304,6 +383,8 @@ function startStopwatch() {
       String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
 
     if (remainingTime <= 0) {
+      timerRunning = false;
+      continuousToggle.disabled = true;
       setTimeout(() => stopStopwatch(), 2000);
     } else {
       remainingTime--;
@@ -312,9 +393,15 @@ function startStopwatch() {
 }
 
 function stopStopwatch() {
+  if (timerInterval === null) return;
   clearInterval(timerInterval);
+  timerInterval = null;
+  timerRunning = false;
+  continuousModeActive = false;
+  continuousToggle.checked = false;
+  continuousToggle.disabled = true;
   remainingTime = timeValue;
-  timerEl.textContent = timeDisplayValue
+  timerEl.textContent = timeDisplayValue;
 }
 
 timerEl.textContent = timeDisplayValue

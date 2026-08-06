@@ -168,7 +168,62 @@
     background: var(--ribbon-dim);
     border-color: var(--ribbon-dim);
   }
-  
+
+  /* Continuous-mode toggle — a real checkbox (needs native :disabled),
+     styled to match the .ctrl-btn language around it. */
+  .ctrl-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    color: var(--bar-text);
+    background: transparent;
+    border: 1px solid var(--ink-mid);
+    padding: 12px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s, background 0.15s, border-color 0.15s, opacity 0.15s;
+  }
+
+  .ctrl-toggle:hover {
+    border-color: var(--bar-text);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .ctrl-toggle-input {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--ribbon);
+    cursor: pointer;
+  }
+
+  /* Distinct disabled look — the toggle spends most of its life disabled,
+     since JS only enables it once the timer is running. */
+  .ctrl-toggle:has(.ctrl-toggle-input:disabled) {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .ctrl-toggle:has(.ctrl-toggle-input:disabled):hover {
+    border-color: var(--ink-mid);
+    background: transparent;
+  }
+
+  .ctrl-toggle-input:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Utility: applied by JS to the (anchor-based) generate buttons while
+     continuous mode is actively running — <a> has no native disabled. */
+  .is-disabled {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
   /* Mobile-only generate button — hidden on desktop */
   .generate-btn-mobile {
     display: none;
@@ -206,6 +261,9 @@
     border: 1px solid var(--paper-edge);
     padding: 44px 56px;
     min-height: 480px;
+    max-height: 480px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
   }
   
   #output {
@@ -343,7 +401,13 @@
       padding: 20px 16px 100px;
     }
     .paper-shadow { inset: 8px -8px -8px 8px; }
-    .paper-sheet { padding: 24px 20px; min-height: 0; }
+    .paper-sheet {
+      padding: 24px 20px;
+      min-height: 0;
+      max-height: 50vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
     #output { font-size: clamp(16px, 4.5vw, 20px); line-height: 1.85; }
 
     /* Full-width generate button below the paper */
